@@ -8,7 +8,17 @@ The application is backed by **CognoDB**, a managed graph database, and communic
 
 ---
 
-## Features
+## Live Demo
+
+**Hosted Application:**  
+https://pathfinder-nine-sigma.vercel.app
+
+**GitHub Repository:**  
+https://github.com/averma1998/pathfinder
+
+---
+
+# Features
 
 - Developer profile analysis
 - Target-role skill gap analysis
@@ -22,8 +32,11 @@ The application is backed by **CognoDB**, a managed graph database, and communic
 - Skill → Skill relationships
 - Multi-hop graph traversal
 - Parameterized Cypher queries
-- Loading, empty, and error states
+- Loading states
+- Empty states
+- Error handling
 - Realistic graph seed data
+- Interactive graph node inspection
 
 ---
 
@@ -140,7 +153,6 @@ Graph Structure
                                 |
                             HAS_SKILL
                                 |
-                                |
                          +------+------+
                          |  Developer  |
                          +------+------+
@@ -152,7 +164,7 @@ Graph Structure
                          |   Project   |
                          +------+------+
                                 |
-                              USES
+                               USES
                                 |
                                 v
                          +-------------+
@@ -297,15 +309,15 @@ Application Architecture
                                | HTTP
                                v
                     +----------------------+
-                    |    Next.js API       |
-                    |      Routes          |
+                    |     Next.js API      |
+                    |       Routes         |
                     +----------+-----------+
                                |
                                | Cypher
                                v
                     +----------------------+
                     |   Neo4j JavaScript   |
-                    |       Driver         |
+                    |       Driver        |
                     +----------+-----------+
                                |
                                | Bolt
@@ -335,33 +347,34 @@ Node.js
 npm
 Git
 GitHub
+Vercel
 Application Flow
 
 A typical PathFinder workflow is:
 
-                  PathFinder
-                      |
-                      v
-              Select Developer
-                      |
-                      v
-               Select Target Job
-                      |
-                      v
-               Career Analysis
-                      |
-          +-----------+-----------+
-          |                       |
-          v                       v
-    Missing Skills        Recommendations
-          |                       |
-          +-----------+-----------+
-                      |
-                      v
-             Similar Developers
-                      |
-                      v
-             Interactive Graph
+                    PathFinder
+                        |
+                        v
+                Select Developer
+                        |
+                        v
+                 Select Target Job
+                        |
+                        v
+                  Career Analysis
+                        |
+             +----------+----------+
+             |                     |
+             v                     v
+       Missing Skills       Recommendations
+             |                     |
+             +----------+----------+
+                        |
+                        v
+                Similar Developers
+                        |
+                        v
+                Interactive Graph
 Main Features
 1. Developer Profile
 
@@ -464,9 +477,7 @@ Zooming
 Dragging nodes
 Selecting nodes
 Inspecting relationships
-
-The graph is automatically arranged using Dagre.
-
+Viewing connected node information
 Cypher Queries
 
 The main Cypher queries are stored in:
@@ -486,8 +497,7 @@ Career Path Query
 File:
 
 queries/career-path.cypher
-
-Purpose:
+Purpose
 
 Find skills required by a target job that are not currently connected to the developer.
 
@@ -513,8 +523,7 @@ Similar Developers Query
 File:
 
 queries/similar-developers.cypher
-
-Purpose:
+Purpose
 
 Find developers who share skills with the selected developer.
 
@@ -530,15 +539,14 @@ Developer
     |
 Developer
 
-Developers are ranked based on shared skill count.
+Developers are ranked based on their shared skill count.
 
 Graph Explorer Query
 
 File:
 
 queries/graph-explorer.cypher
-
-Purpose:
+Purpose
 
 Retrieve the connected career graph for a developer.
 
@@ -554,13 +562,14 @@ Developer
 
 The result is transformed into nodes and relationships for the React Flow graph visualization.
 
+The UI also supports selecting a node to inspect its connected relationships.
+
 Recommendations Query
 
 File:
 
 queries/recommendations.cypher
-
-Purpose:
+Purpose
 
 Recommend skills that are connected to a developer's current skills and are relevant to the target job.
 
@@ -598,7 +607,7 @@ const result = await session.run(
 
 User-controlled values are passed as query parameters instead of being concatenated into Cypher strings.
 
-This keeps the database interaction safer and makes the queries easier to maintain.
+This keeps database interaction safer and makes the queries easier to maintain.
 
 Seed Data
 
@@ -624,22 +633,36 @@ pathfinder/
 │   ├── api/
 │   │   ├── career-path/
 │   │   ├── developers/
+│   │   │   └── [id]/
 │   │   ├── graph/
+│   │   ├── health/
+│   │   ├── jobs/
 │   │   └── recommendations/
 │   │
 │   ├── career-path/
 │   │   └── page.tsx
 │   │
 │   ├── layout.tsx
-│   └── page.tsx
+│   ├── page.tsx
+│   └── global.css
 │
 ├── components/
 │   ├── GraphView.tsx
 │   ├── RecommendationCard.tsx
-│   └── SimilarDevelopers.tsx
+│   ├── SimilarDevelopers.tsx
+│   ├── DeveloperProfile.tsx
+│   ├── DeveloperSelector.tsx
+│   ├── DeveloperSearch.tsx
+│   ├── JobSelector.tsx
+│   ├── CareerAnalysis.tsx
+│   ├── CareerPath.tsx
+│   ├── ProjectCard.tsx
+│   ├── SkillCard.tsx
+│   └── LoadingState.tsx
 │
 ├── lib/
-│   └── cognodb.ts
+│   ├── cognodb.ts
+│   └── queries.ts
 │
 ├── scripts/
 │   └── seed.ts
@@ -652,13 +675,21 @@ pathfinder/
 │   └── README.md
 │
 ├── docs/
-│   └── graph-data-model.md
+│   ├── graph-data-model.md
+│   └── screenshots/
+│       ├── homepage.png
+│       ├── career_analysis.png
+│       ├── recommendations.png
+│       ├── similar_developers.png
+│       ├── graph_explorer.png
+│       └── graph_explorer_nodes.png
 │
 ├── public/
 │
 ├── .env.example
-├── .env.local
+├── .gitignore
 ├── package.json
+├── package-lock.json
 ├── tsconfig.json
 └── README.md
 Getting Started
@@ -710,9 +741,6 @@ Add:
 COGNODB_URI=bolt+s://your-instance-id.databases.cognodb.cloud
 COGNODB_USERNAME=cognodb
 COGNODB_PASSWORD=your-password
-Security
-
-Never commit .env.local to GitHub.
 
 For other developers, use .env.example:
 
@@ -723,7 +751,7 @@ Installation
 
 Clone the repository:
 
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/averma1998/pathfinder.git
 cd pathfinder
 
 Install dependencies:
@@ -752,7 +780,9 @@ Before deployment, verify that the project builds successfully:
 
 npm run build
 
-Then start the production server with:
+The production build currently completes successfully.
+
+Start the production server with:
 
 npm start
 Error Handling
@@ -781,80 +811,39 @@ The .env.local file must never be committed to GitHub.
 
 Cypher queries use parameters rather than string concatenation.
 
+The repository contains .env.example as a safe template for configuring the application.
+
 Screenshots
+1. PathFinder Homepage
 
-Screenshots will be added before final submission.
+The homepage allows users to select a developer profile and a target career role.
 
-Recommended screenshots:
-
-1. Home / Developer Selection
-docs/screenshots/home.png
 2. Career Analysis
-docs/screenshots/career-analysis.png
-3. Skill Recommendations
-docs/screenshots/recommendations.png
+
+The career analysis view displays the developer profile and identifies skills that are missing for the selected target role.
+
+3. Graph-Based Recommendations
+
+PathFinder provides graph-based recommendations for skills that can help the developer progress toward the selected target role.
+
 4. Similar Developers
-docs/screenshots/similar-developers.png
-5. Interactive Graph
-docs/screenshots/graph-explorer.png
+
+The application identifies developers who share skills with the selected developer and displays the shared skills.
+
+5. Interactive Career Graph
+
+The graph explorer visualizes the developer's relationships with skills, projects, and technologies.
+
+6. Graph Node Inspection
+
+Users can select a graph node to inspect its details, node ID, relationship types, and connected nodes.
+
 Hosted Demo
 
-Demo URL: To be added before submission.
+The application is deployed using Vercel.
 
-The deployed application will connect to CognoDB using environment variables configured on the hosting platform.
+Live Demo:
 
-Screen Recording
+https://pathfinder-nine-sigma.vercel.app
 
-A short screen recording will demonstrate the complete application workflow:
-
-1. Open PathFinder
-2. Select a developer
-3. Select a target job
-4. View developer skills
-5. View missing skills
-6. View skill recommendations
-7. View similar developers
-8. Explore the career graph
-9. Click and inspect graph nodes
-Assignment Requirement Checklist
-Wexa Requirement	PathFinder Implementation
-Graph database application	CognoDB
-Official Neo4j driver	neo4j-driver
-Thoughtful graph data model	Developer / Skill / Project / Technology / Job
-Labeled nodes	Implemented
-Typed relationships	Implemented
-Realistic seed data	scripts/seed.ts
-Seed script	Included
-Multi-hop traversal	Recommendations / Similar Developers
-Relationally awkward query	Shared-skill developer traversal
-Parameterized Cypher	Implemented
-Functional web application	Next.js application
-Clean UI	Implemented
-Loading states	Implemented
-Empty states	Implemented
-Error handling	Implemented
-Environment variables	.env.local
-Cypher query files	queries/
-Data model documentation	docs/graph-data-model.md
-Screenshots	To be added
-Hosted demo	To be deployed
-Screen recording	To be recorded
-GitHub repository	To be submitted
-Future Improvements
-
-Possible future extensions include:
-
-Skill proficiency levels
-Career progression timelines
-Job recommendation ranking
-Learning-resource recommendations
-Resume-to-graph extraction
-Skill similarity scoring
-Personalized learning paths
-Larger real-world datasets
-Historical career progression
-More detailed job matching
-Author
-
-Ayush Verma
-
+The deployed application connects to CognoDB using environment variables configured in the hosting environment.
